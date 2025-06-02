@@ -1,0 +1,30 @@
+BDI                     The Beck Depression Inventory Data
+HIV                     The HIV Data
+KernSmoothIRT           KernSmoothIRT Package
+PCA                     ksIRT - kernel smoothing in Item Response
+                        Theory
+Psych101                The Introductory Psychology Data
+itemcor                 ksIRT - kernel smoothing in Item Response
+                        Theory
+ksIRT                   ksIRT - kernel smoothing in Item Response
+                        Theory
+plot.ksIRT              Plot Method for ksIRT - kernel smoothing in
+                        Item Response Theory
+subjEIS                 ksIRT - kernel smoothing in Item Response
+                        Theory
+subjEISDIF              ksIRT - kernel smoothing in Item Response
+                        Theory
+subjETS                 ksIRT - kernel smoothing in Item Response
+                        Theory
+subjETSDIF              ksIRT - kernel smoothing in Item Response
+                        Theory
+subjOCC                 ksIRT - kernel smoothing in Item Response
+                        Theory
+subjOCCDIF              ksIRT - kernel smoothing in Item Response
+                        Theory
+subjscore               ksIRT - kernel smoothing in Item Response
+                        Theory
+subjscoreML             ksIRT - kernel smoothing in Item Response
+                        Theory
+subjthetaML             ksIRT - kernel smoothing in Item Response
+                        Theory

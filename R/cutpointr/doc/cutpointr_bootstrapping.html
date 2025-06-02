@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Christian Thiele, Lorenz A. Kapsner" />
+
+<meta name="date" content="2022-04-13" />
+
+<title>cutpointr: Bootstrapping</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">cutpointr: Bootstrapping</h1>
+<h4 class="author">Christian Thiele, Lorenz A. Kapsner</h4>
+<h4 class="date">2022-04-13</h4>
+
+
+
+<p>Bootstrapping is implemented in <strong>cutpointr</strong> with two goals:</p>
+<ol style="list-style-type: decimal">
+<li>Determine optimal cutpoints with bootstrapping (as an alternative to determining them without bootstrapping)</li>
+<li>Validate (any) cutpoint optimization with bootstrapping</li>
+</ol>
+<p>This vignette will briefly go through some examples for both approaches.</p>
+<div id="determine-optimal-cutpoints" class="section level1">
+<h1>Determine optimal cutpoints</h1>
+<div id="without-bootstrapping-maximize_metric" class="section level2">
+<h2>Without bootstrapping: <code>maximize_metric</code></h2>
+<p>As a first basic example, the cutpoint optimization will be demonstrated without any bootstrapping by maximizing the Youden-Index. Using the method <code>maximize_metric</code>, this is performed on the full data set:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(cutpointr)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">data</span>(suicide)</span>
+<span id="cb1-3"><a href="#cb1-3"></a>opt_cut &lt;-<span class="st"> </span><span class="kw">cutpointr</span>(</span>
+<span id="cb1-4"><a href="#cb1-4"></a>    <span class="dt">data =</span> suicide,</span>
+<span id="cb1-5"><a href="#cb1-5"></a>    <span class="dt">x =</span> dsi,</span>
+<span id="cb1-6"><a href="#cb1-6"></a>    <span class="dt">class =</span> suicide,</span>
+<span id="cb1-7"><a href="#cb1-7"></a>    <span class="dt">method =</span> maximize_metric,</span>
+<span id="cb1-8"><a href="#cb1-8"></a>    <span class="dt">metric =</span> youden,</span>
+<span id="cb1-9"><a href="#cb1-9"></a>    <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>,</span>
+<span id="cb1-10"><a href="#cb1-10"></a>    <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a>)</span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="kw">summary</span>(opt_cut)</span></code></pre></div>
+<pre><code>## Method: maximize_metric 
+## Predictor: dsi 
+## Outcome: suicide 
+## Direction: &gt;= 
+## 
+##     AUC   n n_pos n_neg
+##  0.9238 532    36   496
+## 
+##  optimal_cutpoint youden    acc sensitivity specificity tp fn fp  tn
+##                 2 0.7518 0.8647      0.8889      0.8629 32  4 68 428
+## 
+## Predictor summary: 
+##     Data Min.   5% 1st Qu. Median      Mean 3rd Qu.  95% Max.       SD NAs
+##  Overall    0 0.00       0      0 0.9210526       1 5.00   11 1.852714   0
+##       no    0 0.00       0      0 0.6330645       0 4.00   10 1.412225   0
+##      yes    0 0.75       4      5 4.8888889       6 9.25   11 2.549821   0</code></pre>
+<p>The fields in the resulting R object <code>opt_cut</code> are to be interpreted as follows:</p>
+<ul>
+<li><code>$optimal_cutpoint</code>: The optimal cutpoint determined by maximizing the Youden-Index on the full <code>suicide</code> dataset.</li>
+<li><code>$sensitivity</code>: The sensitivity when applying the cutpoint to the full dataset.</li>
+<li><code>$specificity</code>: The specificity when applying the cutpoint to the full dataset.</li>
+<li><code>$youden</code>: The maximal Youden-Index (= sensitivity + specificity - 1), determined by the optimization.</li>
+</ul>
+</div>
+<div id="bootstrap-cutpoints-maximize_boot_metric" class="section level2">
+<h2>Bootstrap cutpoints: <code>maximize_boot_metric</code></h2>
+<p>The determination of the optimal cutpoint can also be performed using bootstrapping. Therefore, the methods <code>maximize_boot_metric</code>/<code>minimize_boot_metric</code> need to be chosen. These functions provide further arguments that can be used to configure the bootstrapping. These arguments can be viewed with <code>help(&quot;maximize_boot_metric&quot;, &quot;cutpointr&quot;)</code>. The most important arguments are:</p>
+<ul>
+<li><code>boot_cut</code>: The number of bootstrapping repetitions.</li>
+<li><code>boot_stratify</code>: If the bootstrap samples are drawn in both classes separately before combining them, keep the number of positives/negatives constant in every sample.</li>
+<li><code>summary_func</code>: The summary function to aggregate the optimal cutpoints from the bootstrapping to arrive at one final optimal cutpoint.</li>
+</ul>
+<p>The cutpoint is optimized in n=<code>boot_cut</code> bootstrap samples by maximizing/ minimizing the respective metric (e.g., the Youden-index in this example) in each of these bootstrap samples. Finally, the summary function is applied to aggregate the optimal cutpoints from the n=<code>boot_cut</code> bootstrap samples into one final ‘optimal’ cutpoint.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>opt_cut &lt;-<span class="st"> </span><span class="kw">cutpointr</span>(</span>
+<span id="cb3-3"><a href="#cb3-3"></a>    <span class="dt">data =</span> suicide,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>    <span class="dt">x =</span> dsi,</span>
+<span id="cb3-5"><a href="#cb3-5"></a>    <span class="dt">class =</span> suicide,</span>
+<span id="cb3-6"><a href="#cb3-6"></a>    <span class="dt">method =</span> maximize_boot_metric,</span>
+<span id="cb3-7"><a href="#cb3-7"></a>    <span class="dt">boot_cut =</span> <span class="dv">200</span>,</span>
+<span id="cb3-8"><a href="#cb3-8"></a>    <span class="dt">summary_func =</span> mean,</span>
+<span id="cb3-9"><a href="#cb3-9"></a>    <span class="dt">metric =</span> youden,</span>
+<span id="cb3-10"><a href="#cb3-10"></a>    <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11"></a>    <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a>)</span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="kw">summary</span>(opt_cut)</span></code></pre></div>
+<pre><code>## Method: maximize_boot_metric 
+## Predictor: dsi 
+## Outcome: suicide 
+## Direction: &gt;= 
+## 
+##     AUC   n n_pos n_neg
+##  0.9238 532    36   496
+## 
+##  optimal_cutpoint youden    acc sensitivity specificity tp fn fp  tn
+##             2.055 0.6927 0.8816      0.8056      0.8871 29  7 56 440
+## 
+## Predictor summary: 
+##     Data Min.   5% 1st Qu. Median      Mean 3rd Qu.  95% Max.       SD NAs
+##  Overall    0 0.00       0      0 0.9210526       1 5.00   11 1.852714   0
+##       no    0 0.00       0      0 0.6330645       0 4.00   10 1.412225   0
+##      yes    0 0.75       4      5 4.8888889       6 9.25   11 2.549821   0</code></pre>
+<p>The fields in the resulting R object <code>opt_cut</code> are to be interpreted as follows:</p>
+<ul>
+<li><code>$optimal_cutpoint</code>: The optimal cutpoint, which is the aggregated value (as defined with <code>summary_func</code>) over all n=<code>boot_cut</code> bootstrap samples. Please note that no uncertainty measure (standard deviation, 95%-CI, etc.) is available here (a bootstrap distribution of these cutpoints can be generated using outer bootstrapping with <code>boot_runs &gt; 0</code> and <code>maximize_metric</code>, as explained below).</li>
+<li><code>$sensitivity</code>: The sensitivity when applying the optimal cutpoint to the full dataset.</li>
+<li><code>$specificity</code>: The specificity when applying the optimal cutpoint to the full dataset.</li>
+<li><code>$youden</code>: The Youden-Index when applying the optimal cutpoint to the full dataset.</li>
+</ul>
+</div>
+</div>
+<div id="validate-cutpoint-optimization-with-bootstrapping" class="section level1">
+<h1>Validate cutpoint optimization with bootstrapping</h1>
+<p>Any chosen methods to find the optimal cutpoints can be subsequently validated with bootstrapping. This can easily be activated by setting the argument <code>boot_runs</code> &gt; 0. Please be aware that the first steps to calculate the optimal cutpoints with the specified method (as described above) will be performed in the very same manner as above, resulting in the same outputs as above (depending on the seed when bootstrapping cutpoints).</p>
+<p>However, the method to calculate the optimal cutpoints will then additionally be performed on n=<code>boot_runs</code> bootstrap samples. For each of these bootstrap samples, several metrics and performance measures are available from the resulting <code>$boot</code> object, both for the <em>in-bag</em> (suffix: ‘_b’) and the <em>out-of-bag</em> (suffix: ‘_oob’) bootstrap samples. Please note that the optimal cutpoint is determined on the in-bag samples only and then just applied to the out-of-bag samples for validation purposes, so its value is available only once in the <code>$boot</code> object without a suffix.</p>
+<div id="maximize_metric" class="section level2">
+<h2><code>maximize_metric</code></h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>opt_cut &lt;-<span class="st"> </span><span class="kw">cutpointr</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>    <span class="dt">data =</span> suicide,</span>
+<span id="cb5-3"><a href="#cb5-3"></a>    <span class="dt">x =</span> dsi,</span>
+<span id="cb5-4"><a href="#cb5-4"></a>    <span class="dt">class =</span> suicide,</span>
+<span id="cb5-5"><a href="#cb5-5"></a>    <span class="dt">method =</span> maximize_metric,</span>
+<span id="cb5-6"><a href="#cb5-6"></a>    <span class="dt">metric =</span> youden,</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8"></a>    <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span>,</span>
+<span id="cb5-9"><a href="#cb5-9"></a>    <span class="dt">boot_runs =</span> <span class="dv">100</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a>)</span></code></pre></div>
+<pre><code>## Running bootstrap...</code></pre>
+<p>The interpretation of fields in the resulting R object <code>opt_cut</code> is the same as above. The results from the bootstrapping are available from <code>$boot</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">summary</span>(opt_cut)</span></code></pre></div>
+<pre><code>## Method: maximize_metric 
+## Predictor: dsi 
+## Outcome: suicide 
+## Direction: &gt;= 
+## Nr. of bootstraps: 100 
+## 
+##     AUC   n n_pos n_neg
+##  0.9238 532    36   496
+## 
+##  optimal_cutpoint youden    acc sensitivity specificity tp fn fp  tn
+##                 2 0.7518 0.8647      0.8889      0.8629 32  4 68 428
+## 
+## Predictor summary: 
+##     Data Min.   5% 1st Qu. Median      Mean 3rd Qu.  95% Max.       SD NAs
+##  Overall    0 0.00       0      0 0.9210526       1 5.00   11 1.852714   0
+##       no    0 0.00       0      0 0.6330645       0 4.00   10 1.412225   0
+##      yes    0 0.75       4      5 4.8888889       6 9.25   11 2.549821   0
+## 
+## Bootstrap summary: 
+##          Variable Min.   5% 1st Qu. Median Mean 3rd Qu.  95% Max.   SD NAs
+##  optimal_cutpoint 1.00 1.00    2.00   2.00 2.08    2.00 4.00 4.00 0.69   0
+##             AUC_b 0.85 0.89    0.90   0.92 0.92    0.94 0.96 0.97 0.02   0
+##           AUC_oob 0.82 0.86    0.91   0.93 0.92    0.95 0.97 0.98 0.04   0
+##          youden_b 0.60 0.67    0.72   0.75 0.75    0.79 0.85 0.89 0.06   0
+##        youden_oob 0.49 0.58    0.67   0.73 0.72    0.78 0.84 0.87 0.08   0
+##             acc_b 0.74 0.77    0.86   0.87 0.86    0.88 0.91 0.92 0.04   0
+##           acc_oob 0.74 0.77    0.84   0.86 0.86    0.88 0.90 0.92 0.04   0
+##     sensitivity_b 0.76 0.82    0.86   0.89 0.90    0.93 0.97 1.00 0.05   0
+##   sensitivity_oob 0.60 0.69    0.81   0.87 0.86    0.92 1.00 1.00 0.09   0
+##     specificity_b 0.72 0.76    0.85   0.87 0.86    0.88 0.91 0.92 0.04   0
+##   specificity_oob 0.73 0.76    0.84   0.86 0.86    0.88 0.91 0.93 0.04   0
+##    cohens_kappa_b 0.19 0.25    0.38   0.43 0.41    0.46 0.52 0.56 0.07   0
+##  cohens_kappa_oob 0.15 0.25    0.34   0.39 0.39    0.44 0.49 0.56 0.08   0</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>opt_cut<span class="op">$</span>boot[[<span class="dv">1</span>]] <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="st">  </span><span class="kw">head</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 23
+##   optimal_cutpoint AUC_b AUC_oob youden_b youden_oob acc_b acc_oob sensitivity_b
+##              &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;
+## 1                2 0.891   0.95     0.732      0.698 0.852   0.863         0.882
+## 2                1 0.912   0.969    0.705      0.753 0.774   0.769         0.943
+## 3                2 0.902   0.934    0.718      0.780 0.842   0.918         0.879
+## 4                2 0.892   0.961    0.662      0.808 0.842   0.880         0.818
+## 5                2 0.893   0.966    0.701      0.818 0.850   0.909         0.851
+## 6                2 0.941   0.909    0.788      0.755 0.891   0.843         0.897
+## # ... with 15 more variables: sensitivity_oob &lt;dbl&gt;, specificity_b &lt;dbl&gt;,
+## #   specificity_oob &lt;dbl&gt;, cohens_kappa_b &lt;dbl&gt;, cohens_kappa_oob &lt;dbl&gt;,
+## #   TP_b &lt;dbl&gt;, FP_b &lt;dbl&gt;, TN_b &lt;int&gt;, FN_b &lt;int&gt;, TP_oob &lt;dbl&gt;, FP_oob &lt;dbl&gt;,
+## #   TN_oob &lt;int&gt;, FN_oob &lt;int&gt;, roc_curve_b &lt;list&gt;, roc_curve_oob &lt;list&gt;</code></pre>
+</div>
+<div id="maximize_boot_metric" class="section level2">
+<h2><code>maximize_boot_metric</code></h2>
+<p>When bootstrapping cutpoints and also using the validation with bootstrapping, the optimal cutpoint will again first be determined as above in n=<code>boot_cut</code> bootstrap samples by maximizing/ minimizing the respective metric in each of these bootstrap samples and then by applying the summary function to aggregate the optimal cutpoints from the n=<code>boot_cut</code> bootstrap samples into one final ‘optimal’ cutpoint. Hence, using the same seeds here results in the same outputs as above, where no outer bootstrapping is applied.</p>
+<p>In the validation routine, the chosen cutpoint optimization is then repeated in each of the n=<code>boot_runs</code> (outer) bootstrap samples: the optimal cutpoint is determined in each bootstrap sample by optimizing the <code>metric</code> on n=<code>boot_cut</code> (inner) bootstrap samples and applying the <code>summary_func</code> to aggregate them into one value.</p>
+<p>Since the (inner) bootstrapping of optimal cutpoints is performed in each of the (outer) validation bootstrap samples, this can be computational very expensive and take some time to finish. Therefore, parallelization is implemented in <code>cutpointr</code> by just setting its argument <code>allowParallel = TRUE</code> and initializing a parallel environment.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">library</span>(doParallel)</span></code></pre></div>
+<pre><code>## Loading required package: foreach</code></pre>
+<pre><code>## Loading required package: iterators</code></pre>
+<pre><code>## Loading required package: parallel</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">library</span>(doRNG)</span></code></pre></div>
+<pre><code>## Loading required package: rngtools</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>cl &lt;-<span class="st"> </span><span class="kw">makeCluster</span>(<span class="dv">2</span>) <span class="co"># 2 cores</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="kw">registerDoParallel</span>(cl)</span>
+<span id="cb17-3"><a href="#cb17-3"></a><span class="kw">registerDoRNG</span>(<span class="dv">12</span>)</span>
+<span id="cb17-4"><a href="#cb17-4"></a><span class="kw">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb17-5"><a href="#cb17-5"></a>opt_cut &lt;-<span class="st"> </span><span class="kw">cutpointr</span>(</span>
+<span id="cb17-6"><a href="#cb17-6"></a>    <span class="dt">data =</span> suicide,</span>
+<span id="cb17-7"><a href="#cb17-7"></a>    <span class="dt">x =</span> dsi,</span>
+<span id="cb17-8"><a href="#cb17-8"></a>    <span class="dt">class =</span> suicide,</span>
+<span id="cb17-9"><a href="#cb17-9"></a>    <span class="dt">method =</span> maximize_boot_metric,</span>
+<span id="cb17-10"><a href="#cb17-10"></a>    <span class="dt">boot_cut =</span> <span class="dv">200</span>,</span>
+<span id="cb17-11"><a href="#cb17-11"></a>    <span class="dt">summary_func =</span> mean,</span>
+<span id="cb17-12"><a href="#cb17-12"></a>    <span class="dt">metric =</span> youden,</span>
+<span id="cb17-13"><a href="#cb17-13"></a>    <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>,</span>
+<span id="cb17-14"><a href="#cb17-14"></a>    <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span>,</span>
+<span id="cb17-15"><a href="#cb17-15"></a>    <span class="dt">boot_runs =</span> <span class="dv">100</span>,</span>
+<span id="cb17-16"><a href="#cb17-16"></a>    <span class="dt">allowParallel =</span> <span class="ot">TRUE</span></span>
+<span id="cb17-17"><a href="#cb17-17"></a>)</span></code></pre></div>
+<pre><code>## Running bootstrap...</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">stopCluster</span>(cl)</span></code></pre></div>
+<p>Again, the interpretation of fields in the resulting R object <code>opt_cut</code> is the same as above. The results from the bootstrapping are available from <code>$boot</code>.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="kw">summary</span>(opt_cut)</span></code></pre></div>
+<pre><code>## Method: maximize_boot_metric 
+## Predictor: dsi 
+## Outcome: suicide 
+## Direction: &gt;= 
+## Nr. of bootstraps: 100 
+## 
+##     AUC   n n_pos n_neg
+##  0.9238 532    36   496
+## 
+##  optimal_cutpoint youden    acc sensitivity specificity tp fn fp  tn
+##             2.055 0.6927 0.8816      0.8056      0.8871 29  7 56 440
+## 
+## Predictor summary: 
+##     Data Min.   5% 1st Qu. Median      Mean 3rd Qu.  95% Max.       SD NAs
+##  Overall    0 0.00       0      0 0.9210526       1 5.00   11 1.852714   0
+##       no    0 0.00       0      0 0.6330645       0 4.00   10 1.412225   0
+##      yes    0 0.75       4      5 4.8888889       6 9.25   11 2.549821   0
+## 
+## Bootstrap summary: 
+##          Variable Min.   5% 1st Qu. Median Mean 3rd Qu.  95% Max.   SD NAs
+##  optimal_cutpoint 1.07 1.60    1.93   2.08 2.16    2.28 2.97 3.60 0.45   0
+##             AUC_b 0.86 0.89    0.91   0.93 0.93    0.94 0.96 0.96 0.02   0
+##           AUC_oob 0.84 0.88    0.90   0.92 0.92    0.95 0.97 0.98 0.03   0
+##          youden_b 0.60 0.63    0.68   0.72 0.72    0.76 0.79 0.84 0.05   0
+##        youden_oob 0.48 0.57    0.64   0.69 0.71    0.78 0.84 0.88 0.09   0
+##             acc_b 0.83 0.85    0.87   0.88 0.88    0.89 0.91 0.93 0.02   0
+##           acc_oob 0.83 0.84    0.86   0.88 0.88    0.89 0.91 0.92 0.02   0
+##     sensitivity_b 0.71 0.75    0.80   0.83 0.84    0.87 0.91 0.94 0.05   0
+##   sensitivity_oob 0.58 0.69    0.75   0.81 0.83    0.91 1.00 1.00 0.10   0
+##     specificity_b 0.83 0.85    0.87   0.88 0.88    0.89 0.91 0.94 0.02   0
+##   specificity_oob 0.82 0.83    0.87   0.88 0.88    0.90 0.92 0.93 0.03   0
+##    cohens_kappa_b 0.32 0.33    0.38   0.42 0.43    0.47 0.54 0.59 0.06   0
+##  cohens_kappa_oob 0.22 0.31    0.37   0.41 0.41    0.47 0.53 0.56 0.07   0</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>opt_cut<span class="op">$</span>boot[[<span class="dv">1</span>]] <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="st">  </span><span class="kw">head</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 23
+##   optimal_cutpoint AUC_b AUC_oob youden_b youden_oob acc_b acc_oob sensitivity_b
+##              &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;
+## 1             2.34 0.931   0.950    0.729      0.613 0.870   0.892         0.857
+## 2             2.58 0.948   0.896    0.725      0.628 0.883   0.867         0.839
+## 3             1.70 0.939   0.889    0.784      0.711 0.872   0.846         0.914
+## 4             1.95 0.894   0.962    0.680      0.844 0.861   0.851         0.816
+## 5             2.03 0.906   0.963    0.692      0.786 0.885   0.872         0.8  
+## 6             2.58 0.928   0.881    0.771      0.540 0.900   0.860         0.868
+## # ... with 15 more variables: sensitivity_oob &lt;dbl&gt;, specificity_b &lt;dbl&gt;,
+## #   specificity_oob &lt;dbl&gt;, cohens_kappa_b &lt;dbl&gt;, cohens_kappa_oob &lt;dbl&gt;,
+## #   TP_b &lt;dbl&gt;, FP_b &lt;dbl&gt;, TN_b &lt;int&gt;, FN_b &lt;int&gt;, TP_oob &lt;dbl&gt;, FP_oob &lt;dbl&gt;,
+## #   TN_oob &lt;int&gt;, FN_oob &lt;int&gt;, roc_curve_b &lt;list&gt;, roc_curve_oob &lt;list&gt;</code></pre>
+<p>Some visualizations of the bootstrapping results are available with the <code>plot</code> function:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">plot</span>(opt_cut)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>The two plots in the lower half can be generated separately with <code>plot_cut_boot(opt_cut)</code> and <code>plot_metric_boot(opt_cut)</code>.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

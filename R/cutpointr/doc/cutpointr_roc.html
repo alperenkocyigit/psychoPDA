@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Christian Thiele" />
+
+<meta name="date" content="2022-04-13" />
+
+<title>ROC curves with cutpointr</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">ROC curves with cutpointr</h1>
+<h4 class="author">Christian Thiele</h4>
+<h4 class="date">2022-04-13</h4>
+
+
+
+<div id="calculating-only-the-roc-curve" class="section level2">
+<h2>Calculating only the ROC curve</h2>
+<p>When running <code>cutpointr</code>, a ROC curve is by default returned in the column <code>roc_curve</code>. This ROC curve can be plotted using <code>plot_roc</code>. Alternatively, if only the ROC curve is desired and no cutpoint needs to be calculated, the ROC curve can be created using <code>roc()</code> and plotted using <code>plot_cutpointr</code>. The <code>roc</code> function, unlike <code>cutpointr</code>, does not determine <code>direction</code>, <code>pos_class</code> or <code>neg_class</code> automatically.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(cutpointr)</span>
+<span id="cb1-2"><a href="#cb1-2"></a>roc_curve &lt;-<span class="st"> </span><span class="kw">roc</span>(<span class="dt">data =</span> suicide, <span class="dt">x =</span> dsi, <span class="dt">class =</span> suicide,</span>
+<span id="cb1-3"><a href="#cb1-3"></a>    <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>, <span class="dt">neg_class =</span> <span class="st">&quot;no&quot;</span>, <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">auc</span>(roc_curve)</span></code></pre></div>
+<pre><code>## [1] 0.9237791</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">head</span>(roc_curve)</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 9
+##   x.sorted    tp    fp    tn    fn    tpr   tnr     fpr   fnr
+##      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1      Inf     0     0   496    36 0      1     0       1    
+## 2       11     1     0   496    35 0.0278 1     0       0.972
+## 3       10     2     1   495    34 0.0556 0.998 0.00202 0.944
+## 4        9     3     1   495    33 0.0833 0.998 0.00202 0.917
+## 5        8     4     1   495    32 0.111  0.998 0.00202 0.889
+## 6        7     7     1   495    29 0.194  0.998 0.00202 0.806</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">plot_roc</span>(roc_curve)</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAAEgCAMAAACKBVRjAAAA+VBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OgA6OmY6ZpA6ZrY6kNtNTU1NTW5NTY5NbqtNjshmAABmADpmOgBmZmZmkJBmkLZmkNtmtttmtv9uTU1uTW5uTY5ubqtuq+SOTU2OTW6OTY6OyP+QOgCQZjqQkGaQtpCQttuQ27aQ2/+rbk2rbm6rbo6ryKur5P+2ZgC2Zjq2kGa22/+2/9u2///Ijk3I///bkDrbkGbbtmbbtpDb25Db29vb2//b/7bb/9vb///kq27k///r6+v/tmb/yI7/25D/27b/29v/5Kv//7b//8j//9v//+T///+52EZeAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAM9klEQVR4nO2dC3vbthmFYTf2lGypknZedvMu6RZl3dyt0dbZVbPu4naKsigK//+PGT4S4kUkKEgH5Efa5zxPKvkIYonzCgApUZ9MQqnKaO/AfRcBKIsAlEUAyiIAZRGAsghAWQSgrN4BLEymH32V/rn52w+N+ejnt0npr1/2vU+aUgNgTq/tX2+fZX88SHGsJtlfH/e9U4rqH0AafLL5q5na/87MYxv925fmzI6B9YX5+F9J8u0zc9n3XulJC4BNeyrDYepcU/prNTlzU1LyemIeXAkocTazc/m3MKcv042sL86zMeSms1FKC8D/5jbtzczRsFme3RZ//XPbeCkT0slVBcBHE3P27eQyffTSzVq2yVilugakL+FM89Pr0l9Om5lN9nVKqgCQTV3yt32ObWGX7H9Mdp85HmkBOPn4NtkLYDVxM1QZQDpMFpaMtHcttvPaCKUzBb2ePJZZfj8AtxqXAaTrgwQvM9DSDafxzkFKa8DSZIk2rwHfPM5WVT8AubHMCOBwudlinh7xNB8FrS8ciXwKkgGSDRgHwM5Bf5IBkyMarbQAZCH7zgPyqd++sld2cFhev5DGBYDV5KdytmBb/NE+f8Y1IFjb9XJhZMZfN54J52tBNsNcujsPnhUALA03l6WaNvyfxiE1ADZBmT2q7wW9fTmpvhdkT8RO0j+/mZjH/ynWgC1AC+3ZuN894ruhyiIAZRGAsghAWQSgLAJQFgEoiwCURQDKIgBl9Q3gv1sV96oan48FQgCwjwVCALCPBUIAsI8FQgCwjwVCALCPBUIAsI8F0gWAd7/5Or19/9mTT7/PbzINKLhYPhZWBwDePPkkBfDhixfJdz/e3jgNKLhYPpZWfAA3T7/MRsD7338tg8HduEcHFFwsH4urwyno3W+/T97/7pW7scYPrDr43/UsdylYtM3F2lBJDsCbT9Pk3Y17bECv3GDfVFRrj4XV5wgQDSHQvb5pjNzXHgurQwBjWgP8iY94DfjwxfPsKOj5AI+Cai/yu7YIy79hnQfsmVbuEoA2xQt0r988k9+Hw9A2Reiw3w9YOwkgahAthyv3+USsTWiHa4nrH01hgYwFQAeLZywfC2QcAGzw+kH7fCyQMQAYyFTj87FAhg/ATTv6Qft8LJChA+jw+D2WjwUybAClRVc/aJ+PBTJoAMbjxwkulo8FMmAAWidWh/pYIIMFsHvIrx+0z8cCGSiA+hmXftA+HwtkkACa3kjTD9rnY4EMEUDj+5j6Qft8LBACgH0skAEC2Pch+NB8LJABfkVpgLvUoTgCYB8LZHgAevsoMZaPBUIAsI8FQgCwjwUyOACe/AcQtM/HAiEA2McCIQDYxwIhANjHAhkaAKMf6KE+FggBwD4WCAHAPhbIwAAM+QIsn48FQgCwjwUyLADQN1W0fCyQQQEY9iWIPh8LZEgATL/BxfKxQAYEYOjXgPp8LJDhADB9BxfLxwIhANjHAhkMgOFfBe3zsUDiA8i/FvzdE9GL9PaTvd+UJ4BIqpYHkkodNy9KD3s7RgCRVCkNIUU6Pvz5Velhb8cIIJIqxVFkKNgpSSaipL1e0P26GKik6B0vlwdKb9/9ujwKfK8s4/E7fOXG8rG8Oh0Bb/IiHfk64OsYAcRSeQ24eb51CcCnDo6C8vJA2cQjw+DDX/Ycho7hy3g+H8urq/OAtF5QNhPZ84Cnr7aPejpGAH3J0zEC6EuejhFAX2rumGnqWNfBxfKxQAgA9rFACAD2sUAIAPaxQAYBYBw1IXw+FggBwD4WCAHAPhYIAcA+FggOYH1xchXeuqljIylL4/Ox+GKMgLkxZ7eBbZs6RgCw1hfGTINaNnWMACJIEJxe72/X1DECgLUw5txORQETUUMHjKdjXQcXy8eiiwBgMzPmUu4sA4ZAQwcIANP6ImTq2aqhAwSAaX0R/PJPCKCmvgF0sQejFtr9RV7L/zyoff0VNJrylD4fCzDaCAhUvQME0KvqHSAARPblL6dgoiMX4d3aEPqBHupjCaqPAALoV7UOEACq9UXY23CZah0gAFhyJBp8ILTbgREV6fb5WHpxpqC5MYGfyux2gACwpxeaH3cURADY053moUehBLCrCADC55+kBmCIv4x3qI+lp/xWBAEonwcQgPJbEQTAEQD7WCC6n4iN6sd6fD4WHwHAPhaf7idiBKB8GEoAXdYL2hYKKoyEAGqKfhhaqheU1SeoFhCqdoAAuqwV4UqkVAoIEcCuOqyW4goFFUatXtA9vyQoVYQMsmloexRa1AtyhYLKBYR2RkDTjzXov6IP9bH0Yrwbep4sTq8X7jC0UjFL1oGqUekAAUQ6DN3MzvMTseqUbwG0rAEEEAmAfC6/zI+CtvWCXKGgUgGhhABqwgFsZtPlyZVMRJmKekGuUJD/PIAAoqwBq4k5D/p2jKjSAQLQfTt6ZD/c7POxQAgA9rFA4kxBx30iRgBJnEU47I3oTOUOEECi+3Y0ASRxRgABAIqwBhz09bxyBwggiTMFHXtZCgEkPAyN4GOBEADsY4HEALAw5nJxxFsRBJDE+Tzg7N/ZO9IhKneAAJJob0dfHnNhFgEkBBDBx+KL8SU9mYJCvytZ7gABJHEW4aWcBgR+V7XUgcb8BxDooT4WnuKVIbwoRaR4HsARIIIBLE6uDqhaSQC7QgHI5/FyDnDEIkwAIhDAZjaVj8Qu5Vgo6FS41AECEOFXR2ej4IjzAAIQxQCQvvgJ4DjBU9Cl+1A48MKgUgcIQAR/R+zsNl0CloEVa0odIAARfBg6lyPQzSy0WkSpAwQg4okY7GOBEADsY4EQAOxjgRAA7GOBEADsY4EQAOxjgRAA7GOBEADsY4EQAOxjgRAA7GOBEADsY4F0Wa7m3a+kVsS2ak2mUgcIQBQdQFGdRuoTSL2IrGqNU6kDBCDqsFzNG8Fw88JVrXEqdrs5/wEEeqiP5dVhuRqRveeq1iS75Wp4WVCq6DFUqtNInQhXtcY9XLxuOAJSdToC3n/23Ln5OlDsNgGk6nANsEdB+fJLAD51cBS0rU7j8ndVa9zDxW4TQKquzgPsIJDjf1l+XdWaTMVuE0AqvTNhAkhFALCPBUIAsI8FQgCwjwVCALCPBUIAsI8FQgCwjwVCALCPBUIAsI8FQgCwjwVCALCPBUIAsI8FQgCwjwVCALCPBUIAsI8FQgCwjwVCALCPBUIAsI8Fond1Dq8LSsURAPtYIAQA+1ggBAD7WCAEAPtYIAQA+1ggBAD7WCAEAPtYIAQA+1ggBAD7WCAEAPtYIAQA+1ggBAD7WCAEAPtYIAQA+1ggBAD7WCAEAPtYIGoAPPkPINBDfSwQAoB9LBACgH0sEAKAfSyQLusFuXuFkRBATR3WC3L3CkOU7zYBZOqwVoS7VyoekRBATR1WS3H3CqNaL4hK1WG9IHevUkAoaXgFab1yY/lYXn2OANGAgovlY3mprQH6wcXysbw6rBfk7hWGaEDBxfKxvDqsF9R+HqAfXCwfi0uxcq52cLF8LBACgH0sEAKAfSwQAoB9LBC176kcek489vY+EUBP7X0igJ7a+0QAPbX3id9VVBYBKIsAlEUAyiIAZfULoP2Kibb2Tb/I1NbeNQzdfqnSe9v2k/yTjbD9D1CvAPZcMdHSvvEXmVrau4bB2xfJZ6ft27dtHJ6w/Q9RrwD2fFrW0r7xF5la2ruGwdtPMsZ7tp/cPP0yax62/yHqFcCez4tb2osqv8i0p71reMj25ZW8Z/tJPgWF7X+IegWw54qJlvZJ0y8ytbR3DQ/Yfnq7Z/tJDiBs/0M0mhHQ8ItMre3Thgds/02+mLauA+MeAcevAY2/yNTWPmt4wBpw87x4WksX3o16DdhzxURL+8ZfZGpp7xoGb99NPHu2n+QAwvY/RBrnAb4rJlraN/4iU9v2XcPQ7W8nkj3bzwCE73+AeCasLAJQFgEoiwCURQDKIgBljQ3A+idXNW9hjDmp27lWD69sm5PPH16VnbdfdbKDh2psAOb1pBen10myNJdtT1tf7D68etiCrEeNC8D6ov5S38zSbOdnty1PrMdNAMdoeV7PbTObunurh38wRjhsZsbIsJDbc/E/n9g78tSKM53bu8nivOdOVDUuAI0v3KWNMntscnq9mZ0n8i9ZnN3Krcw99jnyNPtvx1laSm4AqekOAMhWYXldTy7TBpKr5LxtWwDYcVIWj6773P+a7gSARPI+u00fs6EKD6tpCiIpA9hxZPpRnoHGC0BSnlYfyAG49Xg/gNWjvyvPQOMFsOtIpukU9Oh6eXJVaeudguwC8DPlGegOAMhODWR5LRZhOwQshe2CXF2EnZOdGSyM8gx0FwCks5FMR+lhqAQqB5sZFXfQuQVQcpJ5vm6ramwA2nTEuZX2MdC9B7CY7m/Tre41gNWk9f2LXnSXAIxSBKAsAlAWASiLAJRFAMoiAGX9H0yjc1Ffc5t0AAAAAElFTkSuQmCC" style="display: block; margin: auto;" /></p>
+</div>
+<div id="roc-curve-and-optimal-cutpoint-for-multiple-variables" class="section level2">
+<h2>ROC curve and optimal cutpoint for multiple variables</h2>
+<p>Alternatively, we can map the standard evaluation version <code>cutpointr</code> to the column names. If <code>direction</code> and / or <code>pos_class</code> and <code>neg_class</code> are unspecified, these parameters will automatically be determined by <strong>cutpointr</strong> so that the AUC values for all variables will be <span class="math inline">\(&gt; 0.5\)</span>.</p>
+<p>We could do this manually, e.g. using <code>purrr::map</code>, but to make this task more convenient <code>multi_cutpointr</code> can be used to achieve the same result. It maps multiple predictor columns to <code>cutpointr</code>, by default all numeric columns except for the class column.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>mcp &lt;-<span class="st"> </span><span class="kw">multi_cutpointr</span>(suicide, <span class="dt">class =</span> suicide, <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>, </span>
+<span id="cb6-2"><a href="#cb6-2"></a>                <span class="dt">use_midpoints =</span> <span class="ot">TRUE</span>, <span class="dt">silent =</span> <span class="ot">TRUE</span>) </span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="kw">summary</span>(mcp)</span></code></pre></div>
+<pre><code>## Method: maximize_metric 
+## Predictor: age, dsi 
+## Outcome: suicide 
+## 
+## Predictor: age 
+## -------------------------------------------------------------------------------- 
+##  direction    AUC   n n_pos n_neg
+##         &lt;= 0.5257 532    36   496
+## 
+##  optimal_cutpoint sum_sens_spec    acc sensitivity specificity tp fn  fp tn
+##              55.5        1.1154 0.1992      0.9722      0.1431 35  1 425 71
+## 
+## Predictor summary: 
+##     Data Min. 5% 1st Qu. Median    Mean 3rd Qu.   95% Max.      SD NAs
+##  Overall   18 19      24   28.0 34.1259   41.25 65.00   83 15.0542   0
+##       no   18 19      24   28.0 34.2218   41.25 65.50   83 15.1857   0
+##      yes   18 18      22   27.5 32.8056   41.25 54.25   69 13.2273   0
+## 
+## Predictor: dsi 
+## -------------------------------------------------------------------------------- 
+##  direction    AUC   n n_pos n_neg
+##         &gt;= 0.9238 532    36   496
+## 
+##  optimal_cutpoint sum_sens_spec    acc sensitivity specificity tp fn fp  tn
+##               1.5        1.7518 0.8647      0.8889      0.8629 32  4 68 428
+## 
+## Predictor summary: 
+##     Data Min.   5% 1st Qu. Median   Mean 3rd Qu.  95% Max.     SD NAs
+##  Overall    0 0.00       0      0 0.9211       1 5.00   11 1.8527   0
+##       no    0 0.00       0      0 0.6331       0 4.00   10 1.4122   0
+##      yes    0 0.75       4      5 4.8889       6 9.25   11 2.5498   0</code></pre>
+</div>
+<div id="accessing-data-roc_curve-and-boot" class="section level2">
+<h2>Accessing <code>data</code>, <code>roc_curve</code>, and <code>boot</code></h2>
+<p>The object returned by <code>cutpointr</code> is of the classes <code>cutpointr</code>, <code>tbl_df</code>, <code>tbl</code>, and <code>data.frame</code>. Thus, it can be handled like a usual data frame. The columns <code>data</code>, <code>roc_curve</code>, and <code>boot</code> consist of nested data frames, which means that these are list columns whose elements are data frames. They can either be accessed using <code>[</code> or by using functions from the tidyverse. If subgroups were given, the output contains one row per subgroup and the function that accesses the data should be mapped to every row or the data should be grouped by subgroup.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb8-2"><a href="#cb8-2"></a>opt_cut_b_g &lt;-<span class="st"> </span><span class="kw">cutpointr</span>(suicide, dsi, suicide, gender, <span class="dt">boot_runs =</span> <span class="dv">500</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">library</span>(dplyr)</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="kw">library</span>(tidyr)</span>
+<span id="cb9-3"><a href="#cb9-3"></a>opt_cut_b_g <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="st">  </span><span class="kw">group_by</span>(subgroup) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="st">  </span><span class="kw">select</span>(subgroup, boot) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="st">  </span><span class="kw">unnest</span>(<span class="dt">cols =</span> boot) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">sd_oc_boot =</span> <span class="kw">sd</span>(optimal_cutpoint),</span>
+<span id="cb9-8"><a href="#cb9-8"></a>            <span class="dt">m_oc_boot  =</span> <span class="kw">mean</span>(optimal_cutpoint),</span>
+<span id="cb9-9"><a href="#cb9-9"></a>            <span class="dt">m_acc_oob  =</span> <span class="kw">mean</span>(acc_oob))</span></code></pre></div>
+<pre><code>## # A tibble: 2 x 4
+##   subgroup sd_oc_boot m_oc_boot m_acc_oob
+##   &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 female        0.766      2.17     0.880
+## 2 male          1.51       2.92     0.806</code></pre>
+</div>
+<div id="adding-metrics-to-the-result-of-cutpointr-or-roc" class="section level2">
+<h2>Adding metrics to the result of cutpointr() or roc()</h2>
+<p>By default, the output of <code>cutpointr</code> includes the optimized metric and several other metrics. The <code>add_metric</code> function adds further metrics. Here, we’re adding the negative predictive value (NPV) and the positive predictive value (PPV) at the optimal cutpoint per subgroup:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">cutpointr</span>(suicide, dsi, suicide, gender, <span class="dt">metric =</span> youden, <span class="dt">silent =</span> <span class="ot">TRUE</span>) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="st">    </span><span class="kw">add_metric</span>(<span class="kw">list</span>(ppv, npv)) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="st">    </span><span class="kw">select</span>(subgroup, optimal_cutpoint, youden, ppv, npv)</span></code></pre></div>
+<pre><code>## # A tibble: 2 x 5
+##   subgroup optimal_cutpoint   youden      ppv      npv
+##   &lt;chr&gt;               &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 female                  2 0.808118 0.367647 0.993827
+## 2 male                    3 0.625106 0.259259 0.982301</code></pre>
+<p>In the same fashion, additional metric columns can be added to a <code>roc_cutpointr</code> object:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">roc</span>(<span class="dt">data =</span> suicide, <span class="dt">x =</span> dsi, <span class="dt">class =</span> suicide, <span class="dt">pos_class =</span> <span class="st">&quot;yes&quot;</span>,</span>
+<span id="cb13-2"><a href="#cb13-2"></a>    <span class="dt">neg_class =</span> <span class="st">&quot;no&quot;</span>, <span class="dt">direction =</span> <span class="st">&quot;&gt;=&quot;</span>) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="st">  </span><span class="kw">add_metric</span>(<span class="kw">list</span>(cohens_kappa, F1_score)) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="st">  </span><span class="kw">select</span>(x.sorted, tp, fp, tn, fn, cohens_kappa, F1_score) <span class="op">|</span><span class="er">&gt;</span><span class="st"> </span></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="st">  </span><span class="kw">head</span>()</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 7
+##   x.sorted    tp    fp    tn    fn cohens_kappa F1_score
+##      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+## 1      Inf     0     0   496    36       0        0     
+## 2       11     1     0   496    35       0.0506   0.0541
+## 3       10     2     1   495    34       0.0931   0.103 
+## 4        9     3     1   495    33       0.138    0.15  
+## 5        8     4     1   495    32       0.182    0.195 
+## 6        7     7     1   495    29       0.301    0.318</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

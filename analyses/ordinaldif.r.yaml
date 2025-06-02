@@ -1,0 +1,255 @@
+---
+name:  ordinaldif
+title: Ordinal LogR
+jrs:   '1.1'
+
+items:
+
+    - name: debug
+      title: debug
+      type: Html
+
+    - name: twat
+      title: deb twat
+      type: Html
+
+    - name: instructions
+      title: Instructions
+      type: Html
+      visible: True
+
+    - name:  DESCtable
+      title: Procedure Notes
+      type:  Table
+      visible: false
+      rows: 0
+      refs: binaryDIF
+      clearWith:
+          - item
+          - group
+          - matchVar
+          - anchor
+          - groupType
+          - difFlagScale
+          - type
+          - criterion
+          - alpha
+          - nIter
+          - purify
+          - pAdjustMethod
+          - designAnalysis
+          - designAnalysisSigOnly
+          - bootSims
+          - D
+          - twoGroups
+          - groupContrasts
+      columns:
+        - name: bob
+          title: ""
+          type: text
+
+    - name:  DIFtable
+      title: Differential Item Functioning Analysis - Ordinal Logistic Regresion
+      type: Table
+      visible: false
+      rows: 0
+      clearWith:
+          - item
+          - group
+          - matchVar
+          - anchor
+          - groupType
+          - difFlagScale
+          - type
+          - criterion
+          - alpha
+          - nIter
+          - purify
+          - pAdjustMethod
+          - twoGroups
+          - groupContrasts
+
+      columns:
+        - name: item
+          title: Item
+          type: text
+        - name: model
+          title: Model
+          type: text
+
+        - name: logOdds_matchingVar
+          title: "log odds (Match)"
+          type: number
+        - name: logOdds_groupingVar
+          title: "log odds (Group)"
+          type: number
+
+        - name: deltaOR_matchingVar
+          title: "\u0394 OR (Match)"
+          type: number
+        - name: deltaOR_groupingVar
+          title: "\u0394 OR (Group)"
+          type: number
+
+        - name: deltaBeta_matchingVar
+          title: "\u0394 \u03B2 (Match)"
+          type: number
+        - name: deltaBeta_groupingVar
+          title: "\u0394 \u03B2 (Group)"
+          type: number
+
+        - name: deltaNagR2
+          title: "\u0394 R\u00B2"
+          type: number
+          format: zto
+          #visible: (nagEff)
+        - name: chiSquare
+          title: "\u03A7\u00B2 Stat."
+          type: number
+
+        - name: p
+          title: P-value
+          type: number
+          format: zto,pvalue
+
+        - name: deltaBetaFlag_matchingVar
+          title: "\u0394 \u03B2 Flag (Match)"
+          type: text
+          #visible: (deltaBetaFlag)
+        - name: deltaBetaFlag_groupingVar
+          title: "\u0394 \u03B2 Flag (Group)"
+          type: text
+          #visible: (deltaBetaFlag)
+
+        - name: ZT
+          refs: zumboThomas
+          title: Zumbo-Thomas
+          type: text
+          #visible: (difFlagScale:zt)
+        - name: JG
+          title: Jodoin-Gierl
+          type: text
+          #visible: (difFlagScale:jg)
+
+    - name: coefficientsTable
+      title: "Ordinal Logistic Regression Coefficients"
+      type: Table
+      rows: 0
+      columns:
+        - name: itemName
+          title: Item
+          type: text
+      visible: False
+      clearWith:
+          - item
+          - group
+          - matchVar
+          - anchor
+          - groupType
+          - difFlagScale
+          - type
+          - criterion
+          - alpha
+          - nIter
+          - purify
+          - pAdjustMethod
+          - designAnalysis
+          - designAnalysisSigOnly
+          - bootSims
+          - D
+          - twoGroups
+          - groupContrasts
+
+    - name: gcTable
+      title: "Design Analysis - "
+      refs: gelmanCarlin2014
+      type: Table
+      rows: 0
+      visible: (designAnalysis)
+      clearWith:
+          - item
+          - group
+          - matchVar
+          - anchor
+          - groupType
+          - difFlagScale
+          - type
+          - criterion
+          - alpha
+          - nIter
+          - purify
+          - pAdjustMethod
+          - designAnalysis
+          - designAnalysisSigOnly
+          - bootSims
+          - D
+          - groupContrasts
+          - designAnalysisEffectType
+      columns:
+        - name: itemName
+          title: Item
+          type: text
+          combineBelow: True
+        - name: coefficientName
+          title: Term
+          type: text
+          visible: (designAnalysisEffectType:coefficients)
+          combineBelow: True
+        - name: obsEff
+          title: Obs. Effect
+          type: text
+          combineBelow: True
+        - name: bootSE
+          title: Bootstrap SE
+          type: number
+          combineBelow: True
+        - name: label
+          title: Classification
+          type: text
+        - name: hypTrueEff
+          title: Hyp. True Effect
+          type: number
+        - name: typeM
+          title: Type-M Error
+          type: number
+        - name: typeS
+          title: Type-S Error
+          type: number
+          visible: (designAnalysisEffectType:coefficients)
+        - name: estimatedTE
+          title: Est. True Effect
+          type: number
+        - name: power
+          title: Empirical Observed Power
+          type: number
+          format: (zto)
+          visible: (power)
+
+    - name: ICCplots
+      title: Item Response Curves - Based on Ordinal Logistic Regression
+      type: Array
+      items: (plotVarsICC)
+      template:
+          type: Image
+          width:  550
+          height: 450
+          renderFun: .plotICC
+          visible: (plotVarsICC)
+          requiresData: TRUE
+          clearWith:
+              - item
+              - group
+              - matchVar
+              - anchor
+              - groupType
+              - difFlagScale
+              - type
+              - criterion
+              - alpha
+              - nIter
+              - purify
+              - pAdjustMethod
+              - twoGroups
+              - groupContrasts
+
+...

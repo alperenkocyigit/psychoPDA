@@ -1,0 +1,203 @@
+---
+name:  nonParametricIRT
+title: Non-Parametric IRT
+menuGroup: PPDA
+menuSubgroup: Item Response Theory
+version: '1.0.0'
+jas: '1.2'
+
+options:
+    - name: data
+      type: Data
+
+    - name: item
+      title: Responses
+      type: Variables
+      suggested: [continuous]
+      permitted: [numeric]
+
+    - name: group
+      title: Participant group
+      type: Variable
+      suggested: [ordinal]
+      permitted: [factor]
+
+#    - name: key
+#      title: Response Key
+#      type: Variable
+
+#    - name: weights
+#      title: Item Weights
+#      type: Variable
+
+    - name: format
+      title: Item Format
+      type: List
+      options:
+        - title: Binary
+          name:  formatMC
+        - title: Rating-scale
+          name:  formatPartial
+        - title: Nominal
+          name:  formatNominal
+      default: formatMC
+
+  #  - name: SubRank
+#      title: Participant Rank
+#      type: Variable
+
+    - name: miss
+      title: Missing responses
+      type: List
+      options:
+        - title: Permitted
+          name:  option
+        - title: Random fill uniform
+          name:  random.unif
+        - title: Random fill multinomial
+          name:  random.multinom
+        - title: Omit
+          name:  omit
+      default: option
+
+    - name: NAweight
+      type: Number
+      title: Missing Response Weight
+      min: 0
+      max: 1
+      default: 0
+
+#    - name: nevalpoints
+#      type: Number
+#      title: Number of evaluation points
+#      default: 51
+
+#    - name: kernel
+#      title: Kernel Function
+#      type: List
+#      options:
+#        - title: Gaussian
+#          name:  gaussian
+#        - title: Quadratic
+#          name:  quadratic
+#        - title: Uniform
+#          name:  uniform
+#      default: gaussian
+
+#    - name: bandwidth
+#      title: Bandwidth
+##      options:
+  #      - title: Silverman
+  #        name:  Silverman
+  #      - title: Cross-validation
+  #        name:  CV
+  #    default: Silverman
+
+  #  - name: RankFun
+  #    title: Rank Function
+  #    type: List
+  #    options:
+  #      - title: Sum
+  #        name:  sum
+  #      - title: Mean
+  #        name:  mean
+  #    default: sum
+
+  #  - name: thetadist
+  ##    title: Theta distribution
+  #    #suffix: '('
+  #    #prefix: ')'
+  #    default: "norm, 0, 1"
+
+    - name: OCCoption
+      type: String
+      title: Option Characteristic Curve | Option
+      default: "1"
+
+    - name: itemPlotOCC
+      title: Option Characteristic Curve
+      type: Bool
+      default: FALSE
+
+    - name: itemPlotEIS
+      title: Expected Item Score
+      type: Bool
+      default: FALSE
+
+    - name: itemPlotOCCDIF
+      title: Option Characteristic Curve
+      type: Bool
+      default: FALSE
+
+    - name: itemPlotEISDIF
+      title: Expected Item Score
+      type: Bool
+      default: FALSE
+
+    - name: pairwisePlotsDIF
+      title: Pairwise
+      type: Bool
+      default: FALSE
+
+    - name: itemPlotSupplier
+      type: Variables
+      title: Items
+
+    - name: axisTypeTest
+      title: X-Axis
+      type: List
+      options:
+        - title: Theta distribution
+          name:  distribution
+        - title: Expected total score
+          name:  score
+      default: score
+
+    - name: axisTypeItem
+      title: X-Axis
+      type: List
+      options:
+        - title: Theta distribution
+          name:  distribution
+        - title: Expected total score
+          name:  score
+      default: score
+
+    - name: testPlotDensityDIF
+      title: Density - DIF
+      type: Bool
+      default: FALSE
+
+    - name: testPlotExpectedDIF
+      title: Expected - DIF
+      type: Bool
+      default: FALSE
+
+    - name: testPlotSDDIF
+      title: Standard Deviation - DIF
+      type: Bool
+      default: FALSE
+
+    - name: testPlotDensity
+      title: Density
+      type: Bool
+      default: FALSE
+
+    - name: testPlotExpected
+      title: Expected
+      type: Bool
+      default: FALSE
+
+    - name: testPlotSD
+      title: Standard Deviation
+      type: Bool
+      default: FALSE
+
+    - name: resTable
+      title: Polyserial Item-Total Correlation
+      type: Bool
+      default: FALSE
+
+
+
+...
